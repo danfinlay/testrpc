@@ -342,6 +342,65 @@ var tests = function(web3) {
       });
     });
 
+    it("should return the same value from estimateGas as eth_sendTransaction actually uses", function(done) {
+
+      var tx_data = contract.transaction_data;
+      tx_data.to = contractAddress;
+      tx_data.from = accounts[0];
+
+      var estimated_gas = null;
+
+      web3.eth.estimateGas(tx_data, publish);
+
+      function  publish(err, result) {
+        if (err) return done(err);
+        estimated_gas = result;
+        web3.eth.sendTransaction(tx_data, getReceipt);
+      }
+
+      function getReceipt(err, tx_hash) {
+        web3.eth.getTransactionReceipt(tx_hash, compareGas);
+      }
+
+      function compareGas(err, tx_receipt) {
+        if (err) return done(err);
+        var actual_gas = tx_receipt.gasUsed;
+        assert.equal(actual_gas, estimated_gas, 'eth_estimateGas should return the same value as a transaction actually costs.');
+        done();
+      }
+    });
+
+    it("should return the same value from estimateGas as eth_sendTransaction actually uses for another contract", function(done) {
+
+      var tx_data = {
+        data: '6060604052600160a060020a03321660009081526020819052604090206127109055609f80602d6000396000f3606060405260e060020a600035046390b98a1181146024578063f8b2cb4f146050575b005b606c60043560243533600160a060020a0316600090815260208190526040812054829010156076576099565b600160a060020a03600435166000908152602081905260409020545b6060908152602090f35b604080822080548490039055600160a060020a0384168252902080548201905560015b9291505056'
+      }
+      tx_data.to = contractAddress;
+      tx_data.from = accounts[0];
+
+      var estimated_gas = null;
+
+      web3.eth.estimateGas(tx_data, publish);
+
+      function  publish(err, result) {
+        if (err) return done(err);
+        estimated_gas = result;
+        web3.eth.sendTransaction(tx_data, getReceipt);
+      }
+
+      function getReceipt(err, tx_hash) {
+        web3.eth.getTransactionReceipt(tx_hash, compareGas);
+      }
+
+      function compareGas(err, tx_receipt) {
+        if (err) return done(err);
+        var actual_gas = tx_receipt.gasUsed;
+        assert.equal(actual_gas, estimated_gas, 'eth_estimateGas should return the same value as a transaction actually costs.');
+        done();
+      }
+    });
+
+
     it("should be able to estimate gas from an account not within the accounts list (eth_estimateGas)", function(done){
       var tx_data = contract.transaction_data;
       tx_data.to = contractAddress;
